@@ -3,8 +3,21 @@ import 'dotenv/config';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import transporter from './nodemailer.js';
-
+import cors from 'cors'
 const app = express();
+app.use(cors())
+
+
+var whitelist = ['https://yellow-artist-osakc.pwskills.app:5173', 'stringshaper.vercel.app']
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
