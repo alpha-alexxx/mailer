@@ -34,10 +34,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 // Send Mail Endpoint
 app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
+  const { name, website, email, subject, message } = req.body;
 
   try {
-    const { name, website, email, subject, message } = req.body;
-
     const mailOptions = {
       from: `"${website !== undefined ? website : email}" <${email}>`,
       to: process.env.RECEIVER_EMAIL,
@@ -45,15 +44,34 @@ app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
       html: message,
     };
 
-    transporter.sendMail(mailOptions);
-    res.status(200).json({
-      success: true,
-      error: null,
-      data: { ...req.body },
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        res.status(409).json({
+          statusCode: 409,
+          type: 'error',
+          title: 'Failed to Send Email',
+          body: `Dear ${name}, we encountered an issue while attempting to send your email. Please try again later.`,
+          error: error || 'Internal Server Error',
+          data: null,
+        });
+      } else {
+        console.log('Email sent:', info.response);
+        res.status(200).json({
+          statusCode: 200,
+          type: 'success',
+          title: 'Email Successfully Sent',
+          body: `Dear ${name}, your email has been successfully delivered. I will be in touch with you shortly.`,
+          data: { ...req.body }
+        });
+      }
     });
+
   } catch (error) {
-    res.status(500).json({
-      success: false,
+    res.status(404).json({
+      statusCode: 404,
+      type: 'error',
+      title: 'Failed to Send Email',
+      body: `Dear ${name}, we encountered an issue while attempting to send your email. Please try again later.`,
       error: error.message || 'Internal Server Error',
       data: null,
     });
