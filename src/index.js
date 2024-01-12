@@ -3,60 +3,61 @@ import 'dotenv/config';
 import bodyParser from 'body-parser';
 import multer from 'multer';
 import transporter from './nodemailer.js';
-import cors from 'cors'
+import cors from 'cors';
+
 const app = express();
-app.use(cors())
+const PORT = process.env.PORT || 3000;
 
-
-var whitelist = ['https://yellow-artist-osakc.pwskills.app:5173', 'stringshaper.vercel.app']
-var corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true)
+// CORS Configuration
+const whitelist = [process.env.WHITELIST_CORS];
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whitelist.includes(origin)) {
+      callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'))
+      callback(new Error('Not allowed by CORS'));
     }
-  }
-}
+  },
+};
 
+app.use(cors(corsOptions));
+
+// Multer Configuration
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
+// Body Parser Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-const PORT = process.env.PORT || '3000';
-
+// Send Mail Endpoint
 app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
-
   try {
-    const { name, email, subject, message } = await req.body
+    const { name, website, email, subject, message } = req.body;
 
     const mailOptions = {
-      from: email,
-      to: "ankithome8+webmail@gmail.com",
-      subject: subject,
-      text: "Hello world?",
-      html: message
-    }
-    transporter.sendMail(mailOptions)
+      from: `"${website}" <${email}>`,
+      to: process.env.RECEIVER_EMAIL,
+      subject,
+      html: message,
+    };
+
+    transporter.sendMail(mailOptions);
     res.status(200).json({
       success: true,
       error: null,
-      data: {
-        name, email, subject, message
-      }
+      data: { ...req.body },
     });
-  } catch (err) {
-    res.status(404).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      error: err,
-      data: null
+      error: error.message || 'Internal Server Error',
+      data: null,
     });
   }
 });
 
-
+// Start the server
 app.listen(PORT, () => {
-  console.log('The app is running on ' + `http://127.0.0.1:${PORT}`);
+  console.log(`Server is running on http://127.0.0.1:${PORT}`);
 });
