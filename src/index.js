@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // CORS Configuration
-const whitelist = [process.env.WHITELIST_CORS];
+const whitelist = [process.env.WHITELIST_CORS.split(', ')];
 const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.includes(origin)) {
