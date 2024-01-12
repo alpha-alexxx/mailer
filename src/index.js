@@ -12,7 +12,9 @@ const PORT = process.env.PORT || 3000;
 const whitelist = process.env.WHITELIST_CORS.split(', ');
 const corsOptions = {
   origin: (origin, callback) => {
-    if (whitelist.includes(origin)) {
+    if (!origin) { //bypassing for postman
+      return callback(null, true);
+    } else if (whitelist.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -26,17 +28,18 @@ app.use(cors(corsOptions));
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Body Parser Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+
 // Send Mail Endpoint
 app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
+
   try {
-    const { website, email, subject, message } = req.body;
+    const { name, website, email, subject, message } = req.body;
 
     const mailOptions = {
-      from: `"${website || 'From Website'}" <${email}>`,
+      from: `"${website !== undefined ? website : email}" <${email}>`,
       to: process.env.RECEIVER_EMAIL,
       subject,
       html: message,
@@ -58,7 +61,6 @@ app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, (data) => {
-  console.log(`The website is live on ${window.location.origin}:${PORT}`);
-
+app.listen(PORT, () => {
+  console.log(`The website is live ==> https://localhost:${PORT}`);
 });
