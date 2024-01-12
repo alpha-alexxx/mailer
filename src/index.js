@@ -10,7 +10,6 @@ const PORT = process.env.PORT || 3000;
 
 // CORS Configuration
 const whitelist = process.env.WHITELIST_CORS.split(', ');
-console.log(whitelist)
 const corsOptions = {
   origin: (origin, callback) => {
     if (whitelist.includes(origin)) {
@@ -34,10 +33,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // Send Mail Endpoint
 app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
   try {
-    const { name, website, email, subject, message } = req.body;
+    const { website, email, subject, message } = req.body;
 
     const mailOptions = {
-      from: `"${website}" <${email}>`,
+      from: `"${website || 'From Website'}" <${email}>`,
       to: process.env.RECEIVER_EMAIL,
       subject,
       html: message,
@@ -59,6 +58,7 @@ app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://127.0.0.1:${PORT}`);
+app.listen(PORT, (data) => {
+  console.log(`The website is live on ${window.location.origin}:${PORT}`);
+
 });
