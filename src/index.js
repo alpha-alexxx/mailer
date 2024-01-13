@@ -38,7 +38,7 @@ app.post('/api/v1/send-mail', upload.none(), async (req, res) => {
 
   try {
     const mailOptions = {
-      from: `"${website !== undefined ? website : email}" <${email}>`,
+      from: `"${website !== undefined ? `@${name} | ${website}` : email}" <${email}>`,
       to: process.env.RECEIVER_EMAIL,
       subject,
       html: message,
